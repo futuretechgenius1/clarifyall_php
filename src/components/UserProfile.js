@@ -289,7 +289,9 @@ const UserProfile = () => {
                           />
                           <h3>{tool.name}</h3>
                         </div>
-                        <p className="tool-description">{(tool.description || tool.shortDescription || '').substring(0, 80)}...</p>
+                        <p className="tool-description" title={tool.description || tool.shortDescription || ''}>
+                          {tool.description || tool.shortDescription || ''}
+                        </p>
                         <div className="tool-card-footer">
                           <span className="tool-pricing">{tool.pricing_model || tool.pricingModel}</span>
                           <span className="viewed-time">
@@ -444,7 +446,9 @@ const UserProfile = () => {
                       />
                       <h3>{tool.name}</h3>
                     </div>
-                    <p className="tool-description">{tool.shortDescription || tool.description}</p>
+                    <p className="tool-description" title={tool.shortDescription || tool.description}>
+                      {tool.shortDescription || tool.description}
+                    </p>
                     <div className="tool-card-footer">
                       <span className="tool-pricing">{tool.pricingModel}</span>
                       <Link to={`/tool/${tool.id}`} className="btn-view">

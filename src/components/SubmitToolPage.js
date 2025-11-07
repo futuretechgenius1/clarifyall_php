@@ -109,9 +109,9 @@ function SubmitToolPage() {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
-      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        setError('Please upload a valid image file (PNG, JPG, or GIF)');
+        setError('Please upload a valid image file (PNG, JPG, GIF, or WebP)');
         setTimeout(() => setError(''), 3000);
         e.target.value = '';
         return;
@@ -353,7 +353,7 @@ function SubmitToolPage() {
                 <input
                   id="logo-upload"
                   type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/gif"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                   onChange={handleFileChange}
                   required
                   className="file-input-hidden"
@@ -382,7 +382,7 @@ function SubmitToolPage() {
                   </div>
                 )}
               </div>
-              <small>Max file size: 5MB | Supported: PNG, JPG, GIF</small>
+              <small>Max file size: 5MB | Supported: PNG, JPG, GIF, WebP</small>
             </div>
 
             <div className="form-group">

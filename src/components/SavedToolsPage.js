@@ -180,7 +180,7 @@ const SavedToolsPage = () => {
                     </div>
                   </div>
                   
-                  <p className="tool-description">
+                  <p className="tool-description" title={tool.description || tool.shortDescription || 'No description available'}>
                     {tool.description || tool.shortDescription || 'No description available'}
                   </p>
                   

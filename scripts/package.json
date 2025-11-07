@@ -1,0 +1,25 @@
+{
+  "name": "toolify-scraper",
+  "version": "1.0.0",
+  "description": "Scripts to extract all tools from Toolify.ai and generate SQL INSERT scripts",
+  "main": "run-extraction.js",
+  "scripts": {
+    "cleanup": "node cleanup.js",
+    "scrape": "node scrape-toolify.js",
+    "parse": "node parse-toolify-data.js",
+    "download-logos": "node download-logos.js",
+    "map-categories": "node map-categories.js",
+    "generate-sql": "node generate-insert-sql.js",
+    "validate-sql": "node validate-sql.js",
+    "extract": "node run-extraction.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.6.1",
+    "cheerio": "^1.0.0-rc.12",
+    "axios": "^1.6.2",
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.2.0"
+  }
+}
+

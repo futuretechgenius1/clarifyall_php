@@ -152,7 +152,9 @@ function ToolCard({ tool }) {
         </div>
 
         <div className="tool-card-body">
-          <p className="tool-description">{tool.short_description || tool.shortDescription || tool.description}</p>
+          <p className="tool-description" title={tool.short_description || tool.shortDescription || tool.description}>
+            {tool.short_description || tool.shortDescription || tool.description}
+          </p>
           
           <div className="tool-categories">
             {tool.categories && tool.categories.slice(0, 2).map((category, index) => (
