@@ -190,8 +190,22 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0.5rem;
-  z-index: 1001;
+  padding: 0.75rem;
+  z-index: 1002;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hamburger:active {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .hamburger span {
@@ -200,6 +214,7 @@
   background: white;
   border-radius: 3px;
   transition: all 0.3s ease;
+  display: block;
 }
 
 .hamburger.active span:nth-child(1) {
@@ -227,6 +242,7 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 1001;
   }
 
   .logo-text {
@@ -262,6 +278,7 @@
     right: -100%;
     width: 280px;
     height: calc(100vh - 60px);
+    height: calc(100dvh - 60px); /* Use dynamic viewport height for mobile browsers */
     background: rgba(26, 31, 58, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -271,8 +288,11 @@
     gap: 0;
     padding: 2rem 0;
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 212, 255, 0.1);
-    transition: right 0.3s ease;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1001;
+    -webkit-overflow-scrolling: touch;
   }
 
   .navbar-menu.active {
@@ -283,12 +303,17 @@
     padding: 1rem 1.5rem;
     border-radius: 0;
     border-left: 4px solid transparent;
+    min-height: 44px;
   }
 
   .navbar-link:hover {
     background: rgba(255, 255, 255, 0.1);
     border-left-color: white;
     transform: translateX(5px);
+  }
+
+  .navbar-link:active {
+    background: rgba(255, 255, 255, 0.15);
   }
 
   .navbar-link::before {
@@ -300,6 +325,7 @@
     border-radius: 8px;
     text-align: center;
     justify-content: center;
+    min-height: 44px;
   }
 }
 
@@ -314,6 +340,7 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 1001;
   }
 
   .logo-icon {
@@ -578,17 +605,31 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Overlay for mobile menu */
+/* Mobile Menu Backdrop Overlay */
+.mobile-menu-backdrop {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  .navbar-menu.active::before {
-    content: '';
+  .mobile-menu-backdrop {
+    display: block;
     position: fixed;
     top: 60px;
     left: 0;
-    right: 280px;
+    right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: -1;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .mobile-menu-backdrop.active {
+    opacity: 1;
+    visibility: visible;
   }
 
   .navbar-auth {
@@ -601,17 +642,23 @@ html {
   .auth-buttons {
     flex-direction: column;
     width: 100%;
+    gap: 0.75rem;
   }
 
   .navbar-link-auth {
     width: 100%;
     text-align: center;
     padding: 0.875rem 1.5rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .user-menu-button {
     width: 100%;
     justify-content: center;
+    min-height: 44px;
   }
 
   .user-dropdown {
@@ -619,6 +666,7 @@ html {
     box-shadow: none;
     background: rgba(255, 255, 255, 0.1);
     margin-top: 0.5rem;
+    border-radius: 8px;
   }
 
   .user-dropdown-header {
@@ -636,6 +684,7 @@ html {
 
   .user-dropdown-item {
     color: white;
+    min-height: 44px;
   }
 
   .user-dropdown-item svg {
@@ -645,6 +694,10 @@ html {
   .user-dropdown-item:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
+  }
+
+  .user-dropdown-item:active {
+    background: rgba(255, 255, 255, 0.15);
   }
 
   .user-dropdown-item:hover svg {
@@ -659,4 +712,12 @@ html {
     background: rgba(220, 38, 38, 0.2);
     color: #FCA5A5;
   }
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Navbar.css';
@@ -9,12 +9,31 @@ function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Handle body scroll lock when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('mobile-menu-open');
+    };
+  }, [isMenuOpen]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+    // Close user menu when toggling main menu
+    if (!isMenuOpen) {
+      setIsUserMenuOpen(false);
+    }
   };
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+    setIsUserMenuOpen(false);
   };
 
   const toggleUserMenu = () => {
@@ -26,6 +45,11 @@ function Navbar() {
     setIsUserMenuOpen(false);
     closeMenu();
     navigate('/');
+  };
+
+  // Close menu when clicking on backdrop
+  const handleBackdropClick = () => {
+    closeMenu();
   };
 
   return (
@@ -53,11 +77,19 @@ function Navbar() {
           className={`hamburger ${isMenuOpen ? 'active' : ''}`}
           onClick={toggleMenu}
           aria-label="Toggle menu"
+          aria-expanded={isMenuOpen}
         >
           <span></span>
           <span></span>
           <span></span>
         </button>
+
+        {/* Mobile Menu Backdrop */}
+        <div 
+          className={`mobile-menu-backdrop ${isMenuOpen ? 'active' : ''}`}
+          onClick={handleBackdropClick}
+          aria-hidden="true"
+        />
 
         {/* Navigation Menu */}
         <div className={`navbar-menu ${isMenuOpen ? 'active' : ''}`}>
