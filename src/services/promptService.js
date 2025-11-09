@@ -40,6 +40,12 @@ const promptService = {
     return response.data;
   },
 
+  // Get prompt by slug
+  async getPromptBySlug(slug) {
+    const response = await api.get(`/prompts.php/slug/${slug}`);
+    return response.data;
+  },
+
   // Get trending prompts
   async getTrendingPrompts() {
     const response = await api.get('/prompts.php/trending');

@@ -264,10 +264,25 @@ function ToolDetailPage() {
   if (loading) {
     return (
       <div className="tool-detail-page">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading tool details...</p>
-        </div>
+        {/* Show hero section structure while loading */}
+        <section className="tool-hero">
+          <div className="tool-hero-content">
+            <div className="loading-container" style={{ 
+              background: 'transparent', 
+              minHeight: 'auto', 
+              padding: '4rem 2rem',
+              color: 'white'
+            }}>
+              <div className="spinner" style={{ 
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                borderTopColor: 'white'
+              }}></div>
+              <p style={{ color: 'white', marginTop: '1.5rem', fontSize: '1.1rem', fontWeight: 500 }}>
+                Loading tool details...
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -275,13 +290,33 @@ function ToolDetailPage() {
   if (error || !tool) {
     return (
       <div className="tool-detail-page">
-        <div className="error-container">
-          <h2>Tool Not Found</h2>
-          <p>{error || 'The tool you are looking for does not exist.'}</p>
-          <button onClick={() => navigate('/')} className="back-button">
-            Back to Home
-          </button>
-        </div>
+        {/* Show hero section structure for error state */}
+        <section className="tool-hero">
+          <div className="tool-hero-content">
+            <div className="error-container" style={{ 
+              background: 'transparent', 
+              minHeight: 'auto', 
+              padding: '4rem 2rem',
+              color: 'white'
+            }}>
+              <h2 style={{ color: 'white', marginBottom: '1rem' }}>Tool Not Found</h2>
+              <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '2rem' }}>
+                {error || 'The tool you are looking for does not exist.'}
+              </p>
+              <button 
+                onClick={() => navigate('/')} 
+                className="primary-button"
+                style={{ 
+                  background: 'white', 
+                  color: '#667eea',
+                  marginTop: '1rem'
+                }}
+              >
+                Back to Home
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }

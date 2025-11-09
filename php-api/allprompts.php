@@ -31,6 +31,7 @@ if (!in_array($sort, $allowedSortFields)) {
 
 // Build query
 $query = "SELECT p.*, 
+          LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
           pc.name as category_name,
           (p.upvotes - p.downvotes) as score
           FROM prompts p

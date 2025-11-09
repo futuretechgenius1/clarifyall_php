@@ -11,12 +11,13 @@ import {
   getDifficultyLabel,
   formatViews,
   formatScore,
-  copyToClipboard
+  copyToClipboard,
+  generateSlug
 } from '../utils/promptConstants';
 import '../styles/PromptsLibrary.css';
 
 function PromptDetailPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState(null);
   const [relatedPrompts, setRelatedPrompts] = useState([]);
@@ -27,12 +28,12 @@ function PromptDetailPage() {
 
   useEffect(() => {
     loadPrompt();
-  }, [id]);
+  }, [slug]);
 
   const loadPrompt = async () => {
     setLoading(true);
     try {
-      const data = await promptService.getPromptById(id);
+      const data = await promptService.getPromptBySlug(slug);
       setPrompt(data);
       
       // Load related prompts by category, tool_id, and tool name
@@ -180,20 +181,24 @@ function PromptDetailPage() {
 
   if (loading) {
     return (
-      <div className="prompts-loading" style={{ minHeight: '60vh' }}>
-        <div className="spinner"></div>
-        <p>Loading prompt...</p>
+      <div className="prompt-detail">
+        <div className="prompts-loading" style={{ minHeight: '60vh' }}>
+          <div className="spinner"></div>
+          <p style={{ color: 'var(--text-secondary)' }}>Loading prompt...</p>
+        </div>
       </div>
     );
   }
 
   if (!prompt) {
     return (
-      <div className="prompts-empty" style={{ minHeight: '60vh' }}>
-        <h3>Prompt not found</h3>
-        <button className="btn btn-primary" onClick={() => navigate('/prompts')}>
-          Back to Library
-        </button>
+      <div className="prompt-detail">
+        <div className="prompts-empty" style={{ minHeight: '60vh' }}>
+          <h3>Prompt not found</h3>
+          <button className="btn btn-primary" onClick={() => navigate('/prompts')}>
+            Back to Library
+          </button>
+        </div>
       </div>
     );
   }
@@ -253,13 +258,13 @@ function PromptDetailPage() {
           </span>
 
           {prompt.category_name && (
-            <span className="prompt-type-badge" style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
+            <span className="prompt-type-badge" style={{ backgroundColor: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
               🏷️ {prompt.category_name}
             </span>
           )}
 
           {prompt.tool_name && (
-            <span className="prompt-type-badge" style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}>
+            <span className="prompt-type-badge" style={{ backgroundColor: 'rgba(0, 212, 255, 0.15)', color: '#00d4ff', border: '1px solid rgba(0, 212, 255, 0.3)' }}>
               🛠️ {prompt.tool_name}
             </span>
           )}
@@ -348,8 +353,8 @@ function PromptDetailPage() {
                 onError={(e) => e.target.style.display = 'none'}
               />
             </div>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem', textAlign: 'center' }}>
-              Click image to view full size
+            <p style={{ fontSize: '0.875rem', color: '#8b92b0', marginTop: '0.75rem', textAlign: 'center', fontStyle: 'italic' }}>
+              ✨ Click image to view full size
             </p>
           </div>
         )}
@@ -454,8 +459,8 @@ function PromptDetailPage() {
                   key={relatedPrompt.id}
                   className="prompt-card"
                   onClick={() => {
-                    navigate(`/prompts/${relatedPrompt.id}`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    const relatedSlug = relatedPrompt.slug || generateSlug(relatedPrompt.title);
+                    window.open(`/prompts/${relatedSlug}`, '_blank', 'noopener,noreferrer');
                   }}
                 >
                   {relatedPrompt.example_image_url && (

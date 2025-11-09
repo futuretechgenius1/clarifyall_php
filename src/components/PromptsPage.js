@@ -11,8 +11,11 @@ function PromptsPage() {
   const [prompts, setPrompts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalPrompts, setTotalPrompts] = useState(0);
   const [filters, setFilters] = useState({
     search: '',
     type: null,
@@ -29,7 +32,10 @@ function PromptsPage() {
   }, []);
 
   useEffect(() => {
-    loadPrompts();
+    // Check if we should append (page > 1) or replace (page === 1)
+    const shouldAppend = filters.page > 1;
+    loadPrompts(shouldAppend);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const loadData = async () => {
@@ -42,8 +48,13 @@ function PromptsPage() {
     }
   };
 
-  const loadPrompts = async () => {
-    setLoading(true);
+  const loadPrompts = async (append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       const data = await promptService.getPrompts({
         search: filters.search,
@@ -56,17 +67,34 @@ function PromptsPage() {
         limit: filters.limit
       });
       
-      setPrompts(data.prompts || data);
+      const newPrompts = data.prompts || data;
       
-      // Calculate total pages if pagination info is available
-      if (data.total) {
+      if (append) {
+        // Append new prompts to existing ones
+        setPrompts(prev => [...prev, ...newPrompts]);
+      } else {
+        // Replace prompts
+        setPrompts(newPrompts);
+      }
+      
+      // Calculate total pages and check if there's more
+      if (data.total !== undefined) {
+        setTotalPrompts(data.total);
         setTotalPages(Math.ceil(data.total / filters.limit));
+        setHasMore(filters.page < Math.ceil(data.total / filters.limit));
+      } else {
+        // If no total, check if we got fewer items than limit
+        setHasMore(newPrompts.length === filters.limit);
       }
     } catch (error) {
       console.error('Error loading prompts:', error);
-      setPrompts([]);
+      if (!append) {
+        setPrompts([]);
+      }
+      setHasMore(false);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -115,6 +143,7 @@ function PromptsPage() {
   const handleFilterChange = (newFilters) => {
     setFilters({ ...newFilters, page: 1 });
     setPage(1);
+    setHasMore(true);
   };
 
   const handleClearFilters = () => {
@@ -129,13 +158,36 @@ function PromptsPage() {
       limit: 12
     });
     setPage(1);
+    setHasMore(true);
   };
 
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-    setFilters({ ...filters, page: newPage });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      setFilters(prev => ({ ...prev, page: nextPage }));
+      // Load prompts will be triggered by filters change
+    }
   };
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loadingMore || !hasMore) return;
+      
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Load more when user is 200px from bottom
+      if (scrollTop + windowHeight >= documentHeight - 200) {
+        handleLoadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadingMore, hasMore, page]);
 
   const handleSave = (promptId) => {
     // TODO: Implement save to collection
@@ -186,7 +238,7 @@ function PromptsPage() {
 
       {/* Header */}
       <div className="prompts-header">
-        <h1><span>🎨</span> AI Prompts Library</h1>
+        <h1>AI Prompts Library</h1>
       
       </div>
 
@@ -202,7 +254,11 @@ function PromptsPage() {
       {!loading && prompts.length > 0 && (
         <div className="results-header">
           <div className="results-count">
-            <span>{prompts.length} prompt{prompts.length !== 1 ? 's' : ''} found</span>
+            <span>
+              Showing {prompts.length} 
+              {totalPrompts > 0 && ` of ${totalPrompts}`} 
+              {' '}prompt{prompts.length !== 1 ? 's' : ''}
+            </span>
           </div>
           <div className="sort-control">
             <label>Sort By:</label>
@@ -262,53 +318,30 @@ function PromptsPage() {
             ))}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="prompts-pagination">
-              <button
-                className="pagination-btn"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px' }}>
-                  <path d="M15 19l-7-7 7-7" />
-                </svg>
-                Previous
-              </button>
+          {/* Load More Button / Infinite Scroll Indicator */}
+          {hasMore && (
+            <div className="load-more-container">
+              {loadingMore ? (
+                <div className="loading-more">
+                  <div className="spinner"></div>
+                  <p>Loading more prompts...</p>
+                </div>
+              ) : (
+                <button 
+                  className="load-more-btn"
+                  onClick={handleLoadMore}
+                >
+                  Load More Prompts
+                </button>
+              )}
+            </div>
+          )}
 
-              {[...Array(totalPages)].map((_, index) => {
-                const pageNum = index + 1;
-                // Show first page, last page, current page, and pages around current
-                if (
-                  pageNum === 1 ||
-                  pageNum === totalPages ||
-                  (pageNum >= page - 1 && pageNum <= page + 1)
-                ) {
-                  return (
-                    <button
-                      key={pageNum}
-                      className={`pagination-btn ${page === pageNum ? 'active' : ''}`}
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                } else if (pageNum === page - 2 || pageNum === page + 2) {
-                  return <span key={pageNum} style={{ padding: '0 0.5rem' }}>...</span>;
-                }
-                return null;
-              })}
-
-              <button
-                className="pagination-btn"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-              >
-                Next
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '16px', height: '16px' }}>
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+          {/* End of results message */}
+          {!hasMore && prompts.length > 0 && (
+            <div className="end-of-results">
+              <p>You've reached the end! 🎉</p>
+              <p className="end-of-results-subtitle">Showing all {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}</p>
             </div>
           )}
         </>

@@ -93,35 +93,47 @@ function getFullLogoUrl($logoUrl) {
 function getTools() {
     global $pdo;
     
-    // Build base query with LEFT JOIN to include category information
-    $query = "SELECT DISTINCT t.*, c.name as category_name 
+    // Optimize: Only select fields needed for home page (not full_description)
+    // Fields used in ToolCard: id, slug, name, logo_url, pricing_model, short_description/description, 
+    // categories, view_count, save_count, website_url
+    $query = "SELECT DISTINCT 
+                t.id, 
+                t.slug, 
+                t.name, 
+                t.logo_url, 
+                t.pricing_model, 
+                t.short_description, 
+                t.description, 
+                t.website_url, 
+                t.view_count, 
+                t.save_count,
+                t.category_id,
+                c.name as category_name 
               FROM tools t 
               LEFT JOIN categories c ON t.category_id = c.id 
               WHERE t.status = 'APPROVED'";
     $params = [];
     
     // Enhanced search across multiple fields including category names
+    // Note: We're only searching in fields we're selecting (optimized for home page)
     if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
         $searchTerm = trim($_GET['search']);
         $search = '%' . $searchTerm . '%';
         
-        // Search in: tool name, description, full_description, short_description, slug, category name, website_url, feature_tags
+        // Search in: tool name, description, short_description, slug, category name, website_url
         // Using LOWER for case-insensitive search
-        // For JSON fields (feature_tags), convert to text for searching
+        // Removed full_description, feature_tags, platforms from search (not selected for home page)
         $query .= " AND (
             LOWER(t.name) LIKE LOWER(?) OR 
-            LOWER(t.description) LIKE LOWER(?) OR 
-            LOWER(COALESCE(t.full_description, '')) LIKE LOWER(?) OR 
+            LOWER(COALESCE(t.description, '')) LIKE LOWER(?) OR 
             LOWER(COALESCE(t.short_description, '')) LIKE LOWER(?) OR 
             LOWER(t.slug) LIKE LOWER(?) OR 
             LOWER(COALESCE(c.name, '')) LIKE LOWER(?) OR
-            LOWER(COALESCE(t.website_url, '')) LIKE LOWER(?) OR
-            LOWER(COALESCE(t.feature_tags, '')) LIKE LOWER(?) OR
-            LOWER(COALESCE(t.platforms, '')) LIKE LOWER(?)
+            LOWER(COALESCE(t.website_url, '')) LIKE LOWER(?)
         )";
         
-        // Add search term 9 times (one for each field)
-        for ($i = 0; $i < 9; $i++) {
+        // Add search term 6 times (one for each field)
+        for ($i = 0; $i < 6; $i++) {
             $params[] = $search;
         }
     }
@@ -133,10 +145,11 @@ function getTools() {
     
     // Handle pagination
     $page = isset($_GET['page']) ? max(0, (int)$_GET['page']) : 0;
-    $size = isset($_GET['size']) ? max(1, min(100, (int)$_GET['size'])) : 12;
+    // Allow larger sizes for bulk loading (e.g., 5000 for home page)
+    $size = isset($_GET['size']) ? max(1, (int)$_GET['size']) : 12;
     $offset = $page * $size;
     
-    // Get total count for pagination
+    // Get total count for pagination (optimized - no need to select all fields)
     $countQuery = "SELECT COUNT(DISTINCT t.id) as total 
                    FROM tools t 
                    LEFT JOIN categories c ON t.category_id = c.id 
@@ -149,17 +162,14 @@ function getTools() {
         
         $countQuery .= " AND (
             LOWER(t.name) LIKE LOWER(?) OR 
-            LOWER(t.description) LIKE LOWER(?) OR 
-            LOWER(COALESCE(t.full_description, '')) LIKE LOWER(?) OR 
+            LOWER(COALESCE(t.description, '')) LIKE LOWER(?) OR 
             LOWER(COALESCE(t.short_description, '')) LIKE LOWER(?) OR 
             LOWER(t.slug) LIKE LOWER(?) OR 
             LOWER(COALESCE(c.name, '')) LIKE LOWER(?) OR
-            LOWER(COALESCE(t.website_url, '')) LIKE LOWER(?) OR
-            LOWER(COALESCE(t.feature_tags, '')) LIKE LOWER(?) OR
-            LOWER(COALESCE(t.platforms, '')) LIKE LOWER(?)
+            LOWER(COALESCE(t.website_url, '')) LIKE LOWER(?)
         )";
         
-        for ($i = 0; $i < 9; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             $countParams[] = $search;
         }
     }
@@ -175,6 +185,7 @@ function getTools() {
     $totalCount = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     // Add ordering and pagination
+    // Note: created_at is not in SELECT but we can still use it in ORDER BY
     $query .= " ORDER BY t.created_at DESC LIMIT " . max(1, $size) . " OFFSET " . max(0, $offset);
     
     $stmt = $pdo->prepare($query);
@@ -182,14 +193,43 @@ function getTools() {
     $tools = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Map short_description to description and convert logo URLs to full URLs
+    // Also format categories array and add frontend-compatible field names
     foreach ($tools as &$tool) {
-        if (isset($tool['short_description']) && !isset($tool['description'])) {
+        // Ensure description field exists (use short_description if description is empty)
+        if (empty($tool['description']) && !empty($tool['short_description'])) {
             $tool['description'] = $tool['short_description'];
         }
+        
         // Convert logo URL to full URL for cross-origin setup
         if (isset($tool['logo_url'])) {
             $tool['logo_url'] = getFullLogoUrl($tool['logo_url']);
+            $tool['logoUrl'] = $tool['logo_url']; // Frontend compatibility
         }
+        
+        // Add frontend-compatible field names
+        $tool['websiteUrl'] = $tool['website_url'] ?? '';
+        $tool['pricingModel'] = $tool['pricing_model'] ?? 'FREE';
+        $tool['viewCount'] = (int)($tool['view_count'] ?? 0);
+        $tool['saveCount'] = (int)($tool['save_count'] ?? 0);
+        $tool['shortDescription'] = $tool['short_description'] ?? $tool['description'] ?? '';
+        
+        // Format categories as array (for home page, we only need one category)
+        if (!empty($tool['category_id']) && !empty($tool['category_name'])) {
+            $tool['categories'] = [[
+                'id' => (int)$tool['category_id'],
+                'name' => $tool['category_name']
+            ]];
+        } else {
+            $tool['categories'] = [];
+        }
+        
+        // Remove fields not needed for frontend
+        unset($tool['category_id']);
+        unset($tool['category_name']);
+        unset($tool['pricing_model']);
+        unset($tool['view_count']);
+        unset($tool['save_count']);
+        unset($tool['website_url']);
     }
     
     $totalPages = ceil($totalCount / $size);

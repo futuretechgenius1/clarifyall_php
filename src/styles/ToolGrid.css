@@ -1,6 +1,9 @@
 /* Tool Grid Container */
 .tool-grid-container {
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Tool Grid */
@@ -9,6 +12,9 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Empty State */
@@ -152,11 +158,13 @@
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
+    padding: 0 0.25rem;
   }
 
   .empty-state {
     min-height: 300px;
-    padding: 2rem;
+    padding: 2rem 1.5rem;
+    margin: 0 0.5rem;
   }
 
   .empty-icon {
@@ -167,20 +175,25 @@
 
   .empty-state h3 {
     font-size: 1.25rem;
+    word-wrap: break-word;
   }
 
   .empty-state p {
     font-size: 0.95rem;
+    word-wrap: break-word;
   }
 
   .pagination {
     gap: 0.75rem;
     margin-top: 2rem;
+    padding: 0 0.5rem;
+    flex-wrap: wrap;
   }
 
   .pagination-btn {
     padding: 0.75rem 1.25rem;
     font-size: 0.9rem;
+    flex-shrink: 0;
   }
 
   .pagination-btn span {
@@ -190,6 +203,12 @@
   .pagination-btn svg {
     width: 16px;
     height: 16px;
+  }
+
+  .pagination-numbers {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .pagination-number {
@@ -205,22 +224,61 @@
 }
 
 @media (max-width: 640px) {
+  .tool-grid-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .tool-grid {
     grid-template-columns: 1fr;
     gap: 0.875rem;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .tool-grid > * {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .empty-state {
+    margin: 0;
+    padding: 2rem 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 
 @media (max-width: 480px) {
+  .tool-grid-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .tool-grid {
     gap: 0.875rem;
     margin-bottom: 1.25rem;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .tool-grid > * {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .empty-state {
     min-height: 250px;
-    padding: 1.5rem;
+    padding: 1.5rem 1rem;
     border-radius: 14px;
+    margin: 0;
   }
 
   .empty-icon {
@@ -230,20 +288,35 @@
 
   .empty-state h3 {
     font-size: 1.1rem;
+    word-wrap: break-word;
+    padding: 0 0.5rem;
   }
 
   .empty-state p {
     font-size: 0.9rem;
+    word-wrap: break-word;
+    padding: 0 0.5rem;
   }
 
   .pagination {
     gap: 0.5rem;
     margin-top: 1.5rem;
+    padding: 0;
+    flex-wrap: wrap;
   }
 
   .pagination-btn {
     padding: 0.65rem 1rem;
     border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .pagination-numbers {
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    margin: 0.5rem 0;
   }
 
   .pagination-number {
@@ -258,10 +331,50 @@
     height: 36px;
     font-size: 0.9rem;
   }
+}
 
-  /* Hide some page numbers on very small screens */
-  .pagination-numbers {
-    gap: 0.35rem;
+/* Extra small screens */
+@media (max-width: 360px) {
+  .tool-grid {
+    gap: 0.75rem;
+  }
+
+  .empty-state {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .empty-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .empty-state h3 {
+    font-size: 1rem;
+  }
+
+  .empty-state p {
+    font-size: 0.85rem;
+  }
+
+  .pagination {
+    gap: 0.4rem;
+  }
+
+  .pagination-btn {
+    padding: 0.6rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  .pagination-number {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .pagination-ellipsis {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
   }
 }
 

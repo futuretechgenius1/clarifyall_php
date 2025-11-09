@@ -26,7 +26,11 @@ switch ($method) {
                 getPopularPrompts();
             } elseif ($segments[2] === 'statistics') {
                 getStatistics();
+            } elseif (isset($segments[3]) && $segments[2] === 'slug') {
+                // Get by slug: /prompts.php/slug/{slug}
+                getPromptBySlug($segments[3]);
             } elseif (is_numeric($segments[2])) {
+                // Get by ID (backward compatibility)
                 getPromptById($segments[2]);
             }
         } else {
@@ -72,6 +76,7 @@ function getPrompts() {
     global $pdo;
     
     $query = "SELECT p.*, 
+              LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
               pc.name as category_name,
               (p.upvotes - p.downvotes) as score
               FROM prompts p
@@ -211,6 +216,7 @@ function getAllPrompts() {
     global $pdo;
     
     $query = "SELECT p.*, 
+              LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
               pc.name as category_name,
               (p.upvotes - p.downvotes) as score
               FROM prompts p
@@ -248,6 +254,7 @@ function getPromptById($id) {
     
     $stmt = $pdo->prepare("
         SELECT p.*, 
+        LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
         pc.name as category_name,
         (p.upvotes - p.downvotes) as score
         FROM prompts p
@@ -260,6 +267,7 @@ function getPromptById($id) {
     if ($prompt) {
         $prompt['tags'] = json_decode($prompt['tags'], true) ?: [];
         $prompt['parameters'] = json_decode($prompt['parameters'], true) ?: [];
+        // Slug is already generated in the SELECT statement
         echo json_encode($prompt);
     } else {
         http_response_code(404);
@@ -267,11 +275,53 @@ function getPromptById($id) {
     }
 }
 
+function getPromptBySlug($slug) {
+    global $pdo;
+    
+    // Match by generated slug from title
+    $stmt = $pdo->prepare("
+        SELECT p.*, 
+        LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
+        pc.name as category_name,
+        (p.upvotes - p.downvotes) as score
+        FROM prompts p
+        LEFT JOIN prompt_categories pc ON p.category_id = pc.id
+        WHERE LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) = ?
+    ");
+    $stmt->execute([strtolower($slug)]);
+    $prompt = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($prompt) {
+        // Increment view count
+        $updateStmt = $pdo->prepare("UPDATE prompts SET views = views + 1 WHERE id = ?");
+        $updateStmt->execute([$prompt['id']]);
+        
+        $prompt['tags'] = json_decode($prompt['tags'], true) ?: [];
+        $prompt['parameters'] = json_decode($prompt['parameters'], true) ?: [];
+        // Slug is already generated in the SELECT statement
+        echo json_encode($prompt);
+    } else {
+        http_response_code(404);
+        echo json_encode(['error' => 'Prompt not found']);
+    }
+}
+
+// Helper function to generate slug from title
+function generateSlugFromTitle($title) {
+    if (empty($title)) return '';
+    $slug = strtolower(trim($title));
+    $slug = preg_replace('/[^\w\s-]/', '', $slug); // Remove special characters
+    $slug = preg_replace('/[\s_-]+/', '-', $slug); // Replace spaces and underscores with hyphens
+    $slug = preg_replace('/^-+|-+$/', '', $slug); // Remove leading/trailing hyphens
+    return $slug;
+}
+
 function getTrendingPrompts() {
     global $pdo;
     
     $stmt = $pdo->prepare("
         SELECT p.*, 
+        LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
         pc.name as category_name,
         (p.upvotes - p.downvotes) as score
         FROM prompts p
@@ -297,6 +347,7 @@ function getPopularPrompts() {
     
     $stmt = $pdo->prepare("
         SELECT p.*, 
+        LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(p.title, ' ', '-'), '_', '-'), '.', ''), ':', ''), ',', ''), '''', '')) as slug,
         pc.name as category_name,
         (p.upvotes - p.downvotes) as score
         FROM prompts p

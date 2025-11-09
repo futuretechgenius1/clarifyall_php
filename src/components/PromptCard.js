@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   getPromptTypeIcon,
   getPromptTypeColor,
@@ -8,20 +7,22 @@ import {
   formatViews,
   formatScore,
   truncateText,
-  copyToClipboard
+  copyToClipboard,
+  generateSlug
 } from '../utils/promptConstants';
 import '../styles/PromptsLibrary.css';
 
 function PromptCard({ prompt, onSave, onUpvote, onDownvote, isSaved = false }) {
-  const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
 
   const handleCardClick = (e) => {
-    // Don't navigate if clicking on action buttons
-    if (e.target.closest('.prompt-action-btn')) {
+    // Don't navigate if clicking on action buttons or copy button
+    if (e.target.closest('.prompt-action-btn') || e.target.closest('.prompt-card-copy-btn')) {
       return;
     }
-    navigate(`/prompts/${prompt.id}`);
+    // Open in new tab using slug
+    const slug = prompt.slug || generateSlug(prompt.title);
+    window.open(`/prompts/${slug}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleCopy = async (e) => {
@@ -95,6 +96,21 @@ function PromptCard({ prompt, onSave, onUpvote, onDownvote, isSaved = false }) {
         )}
         
         <div className="prompt-card-text">
+          <button 
+            className="prompt-card-copy-btn" 
+            onClick={handleCopy}
+            title={copied ? "Copied!" : "Copy prompt"}
+          >
+            {copied ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            )}
+          </button>
           {truncateText(prompt.prompt_text, 100)}
         </div>
 

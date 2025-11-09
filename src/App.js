@@ -130,7 +130,7 @@ function App() {
                   />
                   {/* Prompts Library Routes */}
                   <Route path="/prompts" element={<PromptsPage />} />
-                  <Route path="/prompts/:id" element={<PromptDetailPage />} />
+                  <Route path="/prompts/:slug" element={<PromptDetailPage />} />
                   <Route 
                     path="/submit-prompt" 
                     element={
