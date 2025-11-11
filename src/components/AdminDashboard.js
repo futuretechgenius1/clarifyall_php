@@ -50,6 +50,16 @@ function AdminDashboard() {
     filterTools();
   }, [tools, filterStatus, searchTerm]);
 
+  // Lock body scroll and enable ESC to close sidebar on mobile
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    let keydownHandler;
+
+    if (sidebarOpen && isMobile) {
+      document.body.classList.add('no-scroll');
+      keydownHandler = (e) => {
+        if (e.key === 'Escape')]);
+
   const loadCategories = async () => {
     try {
       const response = await api.get('/categories.php');
